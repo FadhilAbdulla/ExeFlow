@@ -31,7 +31,8 @@ loader="$app/Contents/Resources/wine/lib/wine/x86_64-unix/wine"
 python3 -I scripts/brand-loader.py "$loader" ExeFlow
 codesign --force --preserve-metadata=entitlements --sign - "$loader"
 icons=$(mktemp -d); trap 'rm -rf "$icons"' EXIT
-swift scripts/make-icon.swift "$icons/AppIcon.iconset"
+logo=(); [ -f Support/Logo.png ] && logo=(Support/Logo.png)
+swift scripts/make-icon.swift "$icons/AppIcon.iconset" ${logo[@]+"${logo[@]}"}
 iconutil -c icns "$icons/AppIcon.iconset" -o "$app/Contents/Resources/AppIcon.icns"
 codesign --force --sign - "$app"
 echo "Built $app"

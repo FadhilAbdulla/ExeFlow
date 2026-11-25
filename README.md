@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logo.png" alt="ExeFlow" width="420"></p>
+
 # ExeFlow
 
 Open Windows `.exe` and `.msi` files on a Mac. Built on [Wine](https://www.winehq.org).

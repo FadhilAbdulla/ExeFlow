@@ -1,7 +1,8 @@
-// usage: swift make-icon.swift <output.iconset>
+// usage: swift make-icon.swift <output.iconset> [logo.png]
 // Original artwork: a program window flowing into a laptop. No third-party logos.
 import AppKit
 let out = CommandLine.arguments[1]
+let logo = CommandLine.arguments.count > 2 ? NSImage(contentsOfFile: CommandLine.arguments[2]) : nil
 try FileManager.default.createDirectory(atPath: out, withIntermediateDirectories: true)
 func rgb(_ h: Int, _ a: CGFloat = 1) -> NSColor {
     NSColor(srgbRed: CGFloat(h >> 16 & 255) / 255, green: CGFloat(h >> 8 & 255) / 255, blue: CGFloat(h & 255) / 255, alpha: a)
@@ -68,6 +69,9 @@ for (pt, scale) in [(16,1),(16,2),(32,1),(32,2),(128,1),(128,2),(256,1),(256,2),
     let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: px, pixelsHigh: px, bitsPerSample: 8, samplesPerPixel: 4,
                                hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
     NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
-    draw(CGFloat(px))
+    if let logo { // supplied artwork wins over the drawn icon
+        NSGraphicsContext.current?.imageInterpolation = .high
+        logo.draw(in: NSRect(x: 0, y: 0, width: px, height: px))
+    } else { draw(CGFloat(px)) }
     try rep.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: "\(out)/icon_\(pt)x\(pt)\(scale == 2 ? "@2x" : "").png"))
 }
