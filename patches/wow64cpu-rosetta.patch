@@ -1,5 +1,5 @@
---- a/dlls/wow64cpu/cpu.c	2026-11-25 00:59:40
-+++ b/dlls/wow64cpu/cpu.c	2026-11-25 00:59:40
+--- a/dlls/wow64cpu/cpu.c
++++ b/dlls/wow64cpu/cpu.c
 @@ -33,11 +33,12 @@
  #pragma pack(push,1)
  struct thunk_32to64

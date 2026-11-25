@@ -17,11 +17,14 @@ Open Windows `.exe` and `.msi` files on a Mac. Built on [Wine](https://www.wineh
 - Direct3D 10 and 11 programs, which includes most modern games, don't work. Neither do kernel drivers.
 - Needs Apple Rosetta, which Apple is cutting back in macOS 28.
 - The sandbox uses Apple's deprecated `sandbox-exec`. It is strong protection, not a guarantee. Only open programs you trust.
-- The bundled Wine is a community build that Apple has not notarized, apart from two components built here from WineHQ source.
+- Wine is built here from WineHQ source, but its host libraries (FreeType, GnuTLS, SDL, MoltenVK), Mono and Gecko come from a downloaded community build. Nothing is notarized.
+- Media playback through GStreamer is not built.
+- Moving an environment with Microsoft .NET to a newer Wine version stalls; not solved yet.
 
 ## Build
 
-Needs Xcode, Rosetta, and `brew install mingw-w64 bison freetype`.
+Needs Xcode, Rosetta, and `brew install mingw-w64 bison freetype gnutls sdl2`.
+The first build compiles all of Wine and takes a while.
 
     scripts/bundle.sh && open dist/ExeFlow.app
 
@@ -38,6 +41,7 @@ Needs Xcode, Rosetta, and `brew install mingw-w64 bison freetype`.
 |---|---|
 | `wow64cpu-rosetta.patch` | 32-bit crashes under Rosetta (WineHQ bug 60494) |
 | `winemac-deadlock.patch` | A deadlock between window locks |
+| `winemac-app-name.patch` | Shows the program's name instead of "wine" in the Dock |
 
 ## License
 

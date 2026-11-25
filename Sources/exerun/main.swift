@@ -21,6 +21,6 @@ do {
         }
         print("still missing:", Requirements.missing(for: program, in: env))
     } else {
-        print("exit:", try engine.run(program: program, environment: env, log: log))
+        print("exit:", try engine.run(program: program, name: program.deletingPathExtension().lastPathComponent, environment: env, log: log))
     }
 } catch { print("error:", error.localizedDescription); exit(1) }

@@ -34,7 +34,7 @@ public protocol Engine: Sendable {
     var name: String { get }
     func checkReady() throws
     /// Blocks until the program exits; call off the main thread.
-    func run(program: URL, environment: URL, log: URL) throws -> Int32
+    func run(program: URL, name: String, environment: URL, log: URL) throws -> Int32
     /// Force-closes everything running in the environment. Unsaved work is lost.
     func stop(environment: URL) throws
 }
@@ -84,7 +84,7 @@ public struct WineEngine: Engine {
         return p.terminationStatus == 0
     }
 
-    public func run(program: URL, environment: URL, log: URL) throws -> Int32 {
+    public func run(program: URL, name: String, environment: URL, log: URL) throws -> Int32 {
         FileManager.default.createFile(atPath: log.path, contents: nil)
         // wineserver opens files for every program and keeps the sandbox it started with,
         // so the readable folder is fixed per environment rather than per launch.
@@ -97,7 +97,7 @@ public struct WineEngine: Engine {
             }
         }
         let session = try session(environment: environment, log: log)
-        return try session.run([], folder: program.deletingLastPathComponent(), installer: program)
+        return try session.run([], folder: program.deletingLastPathComponent(), installer: program, name: name)
     }
 
     /// Prepares the environment (first use takes a while) and returns a way to run commands in it.
@@ -150,7 +150,7 @@ public struct WineSession: Sendable {
     let log: URL
 
     /// Runs `installer` (any .exe or .msi) if given, otherwise the Wine command in `command`.
-    public func run(_ command: [String], folder: URL? = nil, installer: URL? = nil, arguments: [String] = [], overrides: String? = nil) throws -> Int32 {
+    public func run(_ command: [String], folder: URL? = nil, installer: URL? = nil, arguments: [String] = [], overrides: String? = nil, name: String? = nil) throws -> Int32 {
         var args = command
         if let program = installer {
             let path: String
@@ -177,6 +177,7 @@ public struct WineSession: Sendable {
         env["PATH"] = "/usr/bin:/bin:/usr/sbin:/sbin"
         env["WINEPREFIX"] = environment.path
         env["WINEDEBUG"] = "fixme-all"
+        if let name { env["EXEFLOW_APP_NAME"] = name } // shown in the Dock, see winemac-app-name.patch
         if let overrides { env["WINEDLLOVERRIDES"] = overrides }
         p.environment = env
         // The folder must be visible inside the environment, or Windows reports "directory name invalid".

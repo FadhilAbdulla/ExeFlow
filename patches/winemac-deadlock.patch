@@ -1,6 +1,6 @@
 diff -ru a/dlls/winemac.drv/macdrv.h b/dlls/winemac.drv/macdrv.h
---- a/dlls/winemac.drv/macdrv.h	2026-11-25 02:31:38
-+++ b/dlls/winemac.drv/macdrv.h	2026-11-25 02:31:38
+--- a/dlls/winemac.drv/macdrv.h
++++ b/dlls/winemac.drv/macdrv.h
 @@ -255,6 +255,7 @@
  extern bool macdrv_client_surface_acquire_metal_swapchain(struct macdrv_client_surface *surface);
  
@@ -10,8 +10,8 @@ diff -ru a/dlls/winemac.drv/macdrv.h b/dlls/winemac.drv/macdrv.h
  extern void init_win_context(void);
  extern WineWindow *macdrv_get_cocoa_window(HWND hwnd, bool require_on_screen);
 diff -ru a/dlls/winemac.drv/surface.c b/dlls/winemac.drv/surface.c
---- a/dlls/winemac.drv/surface.c	2026-11-25 02:31:38
-+++ b/dlls/winemac.drv/surface.c	2026-11-25 02:31:38
+--- a/dlls/winemac.drv/surface.c
++++ b/dlls/winemac.drv/surface.c
 @@ -84,6 +84,7 @@
      CGColorSpaceRef colorspace;
      CGImageRef image;
@@ -41,8 +41,8 @@ diff -ru a/dlls/winemac.drv/surface.c b/dlls/winemac.drv/surface.c
  
  /***********************************************************************
 diff -ru a/dlls/winemac.drv/window.c b/dlls/winemac.drv/window.c
---- a/dlls/winemac.drv/window.c	2026-11-25 02:31:38
-+++ b/dlls/winemac.drv/window.c	2026-11-25 02:31:38
+--- a/dlls/winemac.drv/window.c
++++ b/dlls/winemac.drv/window.c
 @@ -198,6 +198,29 @@
  
  

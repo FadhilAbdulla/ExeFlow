@@ -147,7 +147,7 @@ final class AppModel: ObservableObject {
     func launch(_ e: Entry, program: URL) {
         guard let library else { return }
         guard let engine = WineEngine.locate() else { message = EngineError.notInstalled.localizedDescription; return }
-        let item = e.item, environment = library.environment(for: item), log = library.log(for: item)
+        let item = e.item, name = e.name, environment = library.environment(for: item), log = library.log(for: item)
         let hadApps = !WindowsApps.list(in: environment).isEmpty
         running.insert(e.id)
         Task {
@@ -155,7 +155,7 @@ final class AppModel: ObservableObject {
                 // A dedicated thread: programs may run for hours, so don't tie up a shared worker.
                 let code: Int32 = try await withCheckedThrowingContinuation { done in
                     Thread.detachNewThread {
-                        done.resume(with: Result { try engine.run(program: program, environment: environment, log: log) })
+                        done.resume(with: Result { try engine.run(program: program, name: name, environment: environment, log: log) })
                     }
                 }
                 if code != 0, !stopped.contains(e.id) { message = explain(e, code, log) }
@@ -228,18 +228,7 @@ struct ExeFlowApp: App {
         Window("ExeFlow", id: "main") {
             ContentView(model: .shared).frame(minWidth: 640, minHeight: 400)
         }
-        .commands {
-            CommandGroup(replacing: .help) {
-                if let url = Support.url { Link("Buy Me a Coffee…", destination: url) }
-            }
-        }
     }
-}
-
-enum Support {
-    /// Set MERSupportURL in Info.plist to show the donation button.
-    static let url: URL? = (Bundle.main.object(forInfoDictionaryKey: "MERSupportURL") as? String)
-        .flatMap(URL.init(string:)).flatMap { $0.scheme == "https" && $0.host != nil ? $0 : nil }
 }
 
 struct ContentView: View {
@@ -272,12 +261,6 @@ struct ContentView: View {
                 }
             }
             .frame(minWidth: 190)
-            .safeAreaInset(edge: .bottom) {
-                if let url = Support.url {
-                    Link(destination: url) { Label("Buy Me a Coffee", systemImage: "cup.and.saucer") }
-                        .buttonStyle(.borderless).padding(10)
-                }
-            }
             .toolbar {
                 Button("Open File", systemImage: "plus") { importing = true }
                 Toggle("Show Hidden", systemImage: "eye", isOn: $model.showHidden)

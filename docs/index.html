@@ -155,8 +155,8 @@ footer .wrap { padding-block: 32px; display: grid; gap: 8px }
 
 <section id="build"><div class="wrap">
   <h2>Build it</h2>
-  <p class="soft">There is no ready-made download yet. You need Xcode, Rosetta and Homebrew.</p>
-<pre><code>brew install mingw-w64 bison freetype
+  <p class="soft">There is no ready-made download yet. You need Xcode, Rosetta and Homebrew. The first build compiles all of Wine, so it takes a while.</p>
+<pre><code>brew install mingw-w64 bison freetype gnutls sdl2
 git clone https://github.com/FadhilAbdulla/ExeFlow.git
 cd ExeFlow
 scripts/bundle.sh &amp;&amp; open dist/ExeFlow.app</code></pre>

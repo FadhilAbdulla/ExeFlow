@@ -5,8 +5,6 @@
 <key>CFBundleExecutable</key><string>ExeFlow</string>
 <key>CFBundleIdentifier</key><string>io.github.fadhilabdulla.exeflow</string>
 <key>CFBundleIconFile</key><string>AppIcon</string>
-<!-- Your donation page (https). The button stays hidden while this is empty. -->
-<key>MERSupportURL</key><string></string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>0.1.0</string>
 <key>CFBundleVersion</key><string>1</string>

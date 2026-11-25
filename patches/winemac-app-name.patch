@@ -1,0 +1,38 @@
+diff -ru a/dlls/winemac.drv/cocoa_app.m b/dlls/winemac.drv/cocoa_app.m
+--- a/dlls/winemac.drv/cocoa_app.m
++++ b/dlls/winemac.drv/cocoa_app.m
+@@ -113,6 +113,26 @@
+ @end
+ 
+ 
++/* Show EXEFLOW_APP_NAME instead of "wine" in the Dock and menu bar. Uses private Launch Services
++ * calls looked up at run time, so a missing symbol just leaves the default name. */
++static void set_display_name_from_environment(void)
++{
++    const char *name = getenv("EXEFLOW_APP_NAME");
++    CFBundleRef bundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.LaunchServices"));
++    CFTypeRef (*current_asn)(void);
++    OSStatus (*set_item)(int, CFTypeRef, CFStringRef, CFTypeRef, CFDictionaryRef *);
++    CFStringRef *key;
++    CFTypeRef asn;
++
++    if (!name || !*name || !bundle) return;
++    current_asn = CFBundleGetFunctionPointerForName(bundle, CFSTR("_LSGetCurrentApplicationASN"));
++    set_item = CFBundleGetFunctionPointerForName(bundle, CFSTR("_LSSetApplicationInformationItem"));
++    key = CFBundleGetDataPointerForName(bundle, CFSTR("_kLSDisplayNameKey"));
++    if (!current_asn || !set_item || !key || !*key || !(asn = current_asn())) return;
++    set_item(-2 /* current session */, asn, *key, (CFStringRef)[NSString stringWithUTF8String:name], NULL);
++}
++
++
+ @implementation WineApplicationController
+ 
+     @synthesize keyboardType, lastFlagsChanged;
+@@ -232,6 +252,7 @@
+             NSMenuItem* item;
+ 
+             [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
++            set_display_name_from_environment();
+ 
+             if (activateIfTransformed)
+                 [self tryToActivateIgnoringOtherApps:YES];

@@ -12,21 +12,22 @@ rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$(swift build -c release --show-bin-path)/ExeFlow" "$app/Contents/MacOS/"
 cp Support/Info.plist "$app/Contents/"
-ditto vendor/wine "$app/Contents/Resources/wine"
-# Without this patch many 32-bit programs crash under Rosetta (WineHQ bug 60494).
-dll=vendor/wow64cpu.dll
-if [ ! -f "$dll" ] || [ patches/wow64cpu-rosetta.patch -nt "$dll" ] || [ scripts/build-wow64cpu.sh -nt "$dll" ]; then
-  scripts/build-wow64cpu.sh "$dll"
-fi
-cp "$dll" "$app/Contents/Resources/wine/lib/wine/x86_64-windows/wow64cpu.dll"
-# Without this patch multi-window programs can deadlock.
-so=vendor/winemac.so
-if [ ! -f "$so" ] || [ patches/winemac-deadlock.patch -nt "$so" ] || [ scripts/build-winemac.sh -nt "$so" ]; then
-  scripts/build-winemac.sh "$so"
-fi
-cp "$so" "$app/Contents/Resources/wine/lib/wine/x86_64-unix/winemac.so"
-cp patches/*.patch "$app/Contents/Resources/wine/"
-echo "Modified by ExeFlow: wow64cpu.dll and winemac.so, see the .patch files." >> "$app/Contents/Resources/wine/NOTICE.txt"
+# Wine is built from source; only host libraries, Mono and Gecko come from the downloaded build.
+newest=$(ls -t patches/*.patch scripts/build-wine.sh | head -1)
+if [ ! -x vendor/wine-built/bin/wine ] || [ "$newest" -nt vendor/wine-built/bin/wine ]; then scripts/build-wine.sh; fi
+wine="$app/Contents/Resources/wine"
+ditto vendor/wine-built "$wine"
+cp vendor/wine/lib/*.dylib "$wine/lib/"
+for d in mono gecko; do ditto "vendor/wine/share/wine/$d" "$wine/share/wine/$d"; done
+# Wine upgrades an environment when this file's date changes. Same Wine version, so keep the date:
+# the upgrade stalls in environments that have Microsoft .NET.
+touch -r vendor/wine/share/wine/wine.inf "$wine/share/wine/wine.inf"
+cp vendor/wine/COPYING.LIB patches/*.patch "$wine/"
+cat > "$wine/NOTICE.txt" <<N
+Wine 11.21, LGPL 2.1 or later, built from https://dl.winehq.org/wine/source/11.x/wine-11.21.tar.xz
+with the .patch files in this folder. Libraries in lib/, Wine Mono and Wine Gecko come from
+https://github.com/Gcenx/macOS_Wine_builds and carry their own licenses.
+N
 loader="$app/Contents/Resources/wine/lib/wine/x86_64-unix/wine"
 python3 -I scripts/brand-loader.py "$loader" ExeFlow
 codesign --force --preserve-metadata=entitlements --sign - "$loader"
