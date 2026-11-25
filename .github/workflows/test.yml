@@ -6,9 +6,16 @@ permissions:
   contents: read
 jobs:
   test:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
-      - run: swift build
-      - run: swift test
-      - run: for p in patches/*.patch; do grep -q '^+++ b/dlls/' "$p"; done
+      - name: Build and test
+        shell: bash
+        run: |
+          set -o pipefail
+          swift --version
+          for step in build test; do
+            swift $step 2>&1 | tee log.txt || { grep -E 'error:' log.txt | head -8 | sed 's/^/::error::/'; exit 1; }
+          done
+      - name: Patches are well formed
+        run: for p in patches/*.patch; do grep -q '^+++ b/dlls/' "$p"; done

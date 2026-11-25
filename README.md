@@ -23,7 +23,7 @@ Open Windows `.exe` and `.msi` files on a Mac. Built on [Wine](https://www.wineh
 
 ## Build
 
-Needs Xcode, Rosetta, and `brew install mingw-w64 bison freetype gnutls sdl2`.
+Needs Xcode 26, Rosetta, and `brew install mingw-w64 bison freetype gnutls sdl2`.
 The first build compiles all of Wine and takes a while.
 
     scripts/bundle.sh && open dist/ExeFlow.app
