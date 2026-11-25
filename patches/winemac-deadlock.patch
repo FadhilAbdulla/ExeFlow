@@ -1,0 +1,75 @@
+diff -ru a/dlls/winemac.drv/macdrv.h b/dlls/winemac.drv/macdrv.h
+--- a/dlls/winemac.drv/macdrv.h	2026-11-25 02:31:38
++++ b/dlls/winemac.drv/macdrv.h	2026-11-25 02:31:38
+@@ -255,6 +255,7 @@
+ extern bool macdrv_client_surface_acquire_metal_swapchain(struct macdrv_client_surface *surface);
+ 
+ extern struct macdrv_win_data *get_win_data(HWND hwnd);
++extern struct macdrv_win_data *try_get_win_data(HWND hwnd, bool *busy);
+ extern void release_win_data(struct macdrv_win_data *data);
+ extern void init_win_context(void);
+ extern WineWindow *macdrv_get_cocoa_window(HWND hwnd, bool require_on_screen);
+diff -ru a/dlls/winemac.drv/surface.c b/dlls/winemac.drv/surface.c
+--- a/dlls/winemac.drv/surface.c	2026-11-25 02:31:38
++++ b/dlls/winemac.drv/surface.c	2026-11-25 02:31:38
+@@ -84,6 +84,7 @@
+     CGColorSpaceRef colorspace;
+     CGImageRef image;
+     struct macdrv_win_data *data;
++    bool busy;
+ 
+     colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+     image = CGImageCreate(color_info->bmiHeader.biWidth, abs(color_info->bmiHeader.biHeight), 8, 32,
+@@ -122,7 +123,9 @@
+     /* The window may have been previously drawn with client_surface, for example, when the window
+      * had been a target for a D3D swapchain. Hide the client_view so that it doesn't occlude the
+      * content in the window_surface */
+-    if ((data = get_win_data(window_surface->hwnd)))
++    /* We may be called with the user lock or surface lock held, while other threads call into
++     * win32u with the win data lock held. Don't wait; keep the bounds so the flush is retried. */
++    if ((data = try_get_win_data(window_surface->hwnd, &busy)))
+     {
+         if (data->client_view)
+         {
+@@ -132,7 +135,7 @@
+         release_win_data(data);
+     }
+ 
+-    return TRUE;
++    return !busy;
+ }
+ 
+ /***********************************************************************
+diff -ru a/dlls/winemac.drv/window.c b/dlls/winemac.drv/window.c
+--- a/dlls/winemac.drv/window.c	2026-11-25 02:31:38
++++ b/dlls/winemac.drv/window.c	2026-11-25 02:31:38
+@@ -198,6 +198,29 @@
+ 
+ 
+ /***********************************************************************
++ *              try_get_win_data
++ *
++ * Like get_win_data, but fails with *busy set instead of waiting for the lock.
++ */
++struct macdrv_win_data *try_get_win_data(HWND hwnd, bool *busy)
++{
++    struct macdrv_win_data *data;
++
++    *busy = false;
++    if (!hwnd) return NULL;
++    if (pthread_mutex_trylock(&win_data_mutex))
++    {
++        *busy = true;
++        return NULL;
++    }
++    if (win_datas && (data = (struct macdrv_win_data *)CFDictionaryGetValue(win_datas, hwnd)))
++        return data;
++    pthread_mutex_unlock(&win_data_mutex);
++    return NULL;
++}
++
++
++/***********************************************************************
+  *              release_win_data
+  *
+  * Release the data returned by get_win_data.

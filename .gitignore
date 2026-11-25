@@ -1,0 +1,7 @@
+.build/
+dist/
+.DS_Store
+vendor/
+samples/
+Tests/compat/*.exe
+dist-next/
